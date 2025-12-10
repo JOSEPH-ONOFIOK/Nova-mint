@@ -1,61 +1,72 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import {
-  Bell,
-  User,
   Wallet,
-  Flame,
   TrendingUp,
   Heart,
-  BarChart2,
   Twitter,
   Youtube,
   Instagram,
   Menu,
-   Home,
+  ChevronDown,
+  Bell,
+  User,
+  Flame,
+  BarChart2,
+  Home,
   Search,
-  Plus,
-  ChevronDown
+  Plus
 } from "lucide-react";
 
-const heroImages = [
-  "https://images.unsplash.com/photo-1634193295627-1cdddf751ebf",
-  "https://images.unsplash.com/photo-1643101453922-3f6e2fbc65f6",
-  "https://images.unsplash.com/photo-1637858868799-7f26a0640eb6"
-];
+/* ====== LOCAL ASSETS ====== */
+import madladsBanner from "./assets/mad.png";
+import pudgyBanner from "./assets/pudgy logo.jpg";
+import degodsBanner from "./assets/Degods logo.png";
+import y00tsBanner from "./assets/yoots logg.jpg";
 
-const trending = [
+import madladsLogo from "./assets/mad.png";
+import pudgyLogo from "./assets/pudgy logo.jpg";
+import degodsLogo from "./assets/Degods logo.png";
+import y00tsLogo from "./assets/yoots logg.jpg";
+
+import madladsNft from "./assets/madlads.jpg";
+import pudgyNft from "./assets/pudgy.jpg";
+import degodsNft from "./assets/degods.jpg";
+import y00tsNft from "./assets/yoots.jpg";
+
+/* ========== COLLECTIONS ========== */
+const COLLECTIONS = [
   {
-    title: "Degods",
-    price: "0.82 SOL",
-    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe"
+    name: "Mad Lads",
+    chain: "Solana",
+    logo: madladsLogo,
+    banner: madladsBanner,
+    nft: madladsNft
   },
   {
-    title: "Bored Ape",
-    price: "1.45 SOL",
-    image: "https://images.unsplash.com/photo-1607746882042-944635dfe10e"
+    name: "DeGods",
+    chain: "Solana",
+    logo: degodsLogo,
+    banner: degodsBanner,
+    nft: degodsNft
   },
   {
-    title: "Cool Monks",
-    price: "0.69 SOL",
-    image: "https://images.unsplash.com/photo-1634193295627-1cdddf751ebf"
+    name: "y00ts",
+    chain: "Polygon",
+    logo: y00tsLogo,
+    banner: y00tsBanner,
+    nft: y00tsNft
+  },
+  {
+    name: "Pudgy Penguins",
+    chain: "Ethereum",
+    logo: pudgyLogo,
+    banner: pudgyBanner,
+    nft: pudgyNft
   }
 ];
 
-const collections = Array.from({ length: 12 }).map((_, i) => ({
-  name: [
-    "Mad Lads",
-    "Pudgy Penguins",
-    "The U",
-    "Mini Creatures",
-    "Zuko",
-    "Skull Heads"
-  ][i % 6],
-  price: `${(Math.random() * 2).toFixed(2)} SOL`,
-  image: `https://picsum.photos/seed/nft${i}/320/320`,
-  likes: Math.floor(Math.random() * 500) + 20
-}));
-
+/* ===== Sparkline ===== */
 const Sparkline = () => (
   <svg className="sparkline" viewBox="0 0 100 30">
     <polyline
@@ -67,135 +78,182 @@ const Sparkline = () => (
   </svg>
 );
 
+/* ===== Fake NFT Generator ===== */
+const generateNfts = (collection) =>
+  Array.from({ length: 24 }).map((_, i) => ({
+    name: `${collection.name} #${i + 1}`,
+    image: collection.nft,
+    price: (Math.random() * 5 + 0.1).toFixed(2),
+    likes: Math.floor(Math.random() * 1200),
+    rarity: Math.floor(Math.random() * 10000)
+  }));
+
 export default function App() {
+  const [wallet, setWallet] = useState(null);
+  const [activeCollection, setActiveCollection] = useState(COLLECTIONS[0]);
+  const [gridNfts, setGridNfts] = useState([]);
+  const [sortBy, setSortBy] = useState("price");
+  const [activeFilter, setActiveFilter] = useState(0);
+
+  const filters = ["All Chains", "Solana", "Ethereum", "Polygon"];
+
+  /* Phantom wallet connect (safe demo) */
+  const connectPhantom = async () => {
+    if (!window.solana?.isPhantom) {
+      alert("Install Phantom Wallet");
+      return;
+    }
+    const res = await window.solana.connect();
+    setWallet(res.publicKey.toString());
+  };
+
+  /* Instant NFT loading */
+  useEffect(() => {
+    setGridNfts(generateNfts(activeCollection));
+  }, [activeCollection]);
+
+  /* Sorting */
+  const sortedNfts = [...gridNfts].sort((a, b) => {
+    if (sortBy === "price") return parseFloat(a.price) - parseFloat(b.price);
+    if (sortBy === "rarity") return a.rarity - b.rarity;
+    if (sortBy === "likes") return b.likes - a.likes;
+    return 0;
+  });
+
+  /* Filter Collections */
+  const filteredCollections =
+    activeFilter === 0
+      ? COLLECTIONS
+      : COLLECTIONS.filter((c) => c.chain === filters[activeFilter]);
+
   return (
     <div className="app">
-     
-     {/* ───────── Mobile Bottom Navigation ───────── */}
-<div className="mobileNav">
-  <button className="mobileBtn active">
-    <Home size={20} />
-    <span>Home</span>
-  </button>
 
-  <button className="mobileBtn">
-    <Search size={20} />
-    <span>Explore</span>
-  </button>
+      {/* Mobile Navigation */}
+      <div className="mobileNav">
+        <button className="mobileBtn active"><Home size={20} /><span>Home</span></button>
+        <button className="mobileBtn"><Search size={20} /><span>Explore</span></button>
+        <button className="mobileBtn mid"><Plus size={22} /></button>
+        <button className="mobileBtn"><Heart size={20} /><span>Favorites</span></button>
+        <button className="mobileBtn"><User size={20} /><span>Profile</span></button>
+      </div>
 
-  <button className="mobileBtn mid">
-    <Plus size={22} />
-  </button>
-
-  <button className="mobileBtn">
-    <Heart size={20} />
-    <span>Favorites</span>
-  </button>
-
-  <button className="mobileBtn">
-    <User size={20} />
-    <span>Profile</span>
-  </button>
-</div>
-
-      {/* TOP NAV */}
+      {/* Top Nav */}
       <nav className="topNav">
         <div className="navLeft">
           <Menu size={20} />
-          <div className="logo">NOVAMINT</div>
+          <div className="logo">AETHERS</div>
         </div>
-
-        <input className="search" placeholder="Search collection..." />
 
         <div className="navRight">
           <div className="iconBtn"><Bell size={18} /></div>
-          <div className="iconBtn"><User size={18} /></div>
-          <div className="walletPill">
-            <Wallet size={16} />
-            1.57 SOL <ChevronDown size={14} />
-          </div>
+
+          {!wallet ? (
+            <button onClick={connectPhantom} className="connectBtn">
+              Connect Wallet
+            </button>
+          ) : (
+            <div className="walletPill">
+              <Wallet size={16} />
+              {wallet.slice(0, 6)}...{wallet.slice(-4)}
+              <ChevronDown size={14} />
+            </div>
+          )}
         </div>
       </nav>
 
-      {/* HERO */}
+      {/* Hero */}
       <section className="hero">
+        <img src={activeCollection.banner} className="heroBannerImg" alt="" />
+
         <div className="heroLeft">
-          <span className="badge">INVADERS</span>
-          <h1>Invaders Collection</h1>
-          <p>Discover rare robot NFTs across multichain marketplaces.</p>
+          <span className="badge">FEATURED</span>
+          <h1>{activeCollection.name}</h1>
+          <p>Instant-loading NFT demo collection.</p>
 
           <div className="bidCard">
             <div>
-              <small>Current Bid</small>
+              <small>Floor Price</small>
               <strong>1.42 SOL</strong>
             </div>
             <div>
-              <small>Ending In</small>
-              <strong>12h 42m</strong>
+              <small>Volume</small>
+              <strong>12.8K</strong>
             </div>
           </div>
 
           <button className="heroBtn">
             <Flame size={16} />
-            Place a Bid
+            Explore Collection
           </button>
+        </div>
 
-          <div className="filters mobileScroll">
-            {["All Chains", "Solana", "Ethereum", "Bitcoin"].map((f, i) => (
-              <span key={i} className={`chip ${i === 0 ? "active" : ""}`}>
-                {f}
-              </span>
-            ))}
+        <div className="collectionBadge">
+          <img src={activeCollection.logo} className="collectionLogo" alt="" />
+          <div>
+            <h3>{activeCollection.name}</h3>
+            <span>{activeCollection.chain}</span>
           </div>
         </div>
 
-        <div className="heroImages">
-          {heroImages.map((src, i) => (
-            <img key={i} src={src} className={`heroImg img${i}`} alt="" />
-          ))}
-        </div>
-
-        <div className="stats">
-          {["$138", "$91,528", "$3,148"].map((v, i) => (
-            <div key={i} className="statPill">{v}</div>
+        <div className="filters">
+          {filters.map((f, i) => (
+            <span
+              key={i}
+              className={`chip ${activeFilter === i ? "active" : ""}`}
+              onClick={() => setActiveFilter(i)}
+            >
+              {f}
+            </span>
           ))}
         </div>
       </section>
 
-      {/* MAIN LAYOUT */}
+      {/* Main Layout */}
       <div className="layout">
 
-        {/* TRENDING */}
+        {/* Sidebar */}
         <aside className="trending">
-          <h3>Trending</h3>
-          {trending.map((item, i) => (
-            <div key={i} className="trendCard">
-              <img src={item.image} alt="" />
+          <h3>Collections</h3>
+          {filteredCollections.map((col, i) => (
+            <div
+              key={i}
+              className="trendCard"
+              onClick={() => setActiveCollection(col)}
+            >
+              <img src={col.logo} alt="" />
               <div className="trendMeta">
-                <strong>{item.title}</strong>
-                <p>{item.price}</p>
+                <strong>{col.name}</strong>
+                <p>{col.chain}</p>
               </div>
               <TrendingUp size={14} />
             </div>
           ))}
         </aside>
 
-        {/* NFT GRID */}
+        {/* NFT Grid */}
         <main className="grid">
-          {collections.map((nft, i) => (
+          <div className="sortBar" style={{ gridColumn: "1 / -1" }}>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="price">Price</option>
+              <option value="rarity">Rarity</option>
+              <option value="likes">Likes</option>
+            </select>
+          </div>
+
+          {sortedNfts.map((nft, i) => (
             <div key={i} className="card">
               <div className="shimmer" />
-              <img src={nft.image} alt="" />
+              <img src={nft.image} className="nftImg" alt="" />
 
               <div className="meta">
                 <h4>{nft.name}</h4>
-                <span>{nft.price}</span>
+                <span>{nft.price} SOL</span>
+                <div className="rarity">Rank #{nft.rarity}</div>
               </div>
 
               <div className="cardStats">
-                <span className="likes">
-                  <Heart size={14} /> {nft.likes}
-                </span>
+                <Heart size={14} /> {nft.likes}
                 <BarChart2 size={16} />
               </div>
             </div>
@@ -203,43 +261,35 @@ export default function App() {
         </main>
       </div>
 
-      {/* ANALYTICS + FEATURED */}
+      {/* Lower Panel */}
       <section className="lowerPanel">
         <div className="analytics">
           <h3>Top Collections</h3>
-          {["Mad Lads", "Invaders", "Zuko", "Skull Heads"].map((name, i) => (
+          {filteredCollections.map((col, i) => (
             <div key={i} className="row">
-              <span>{name}</span>
+              <span>{col.name}</span>
               <Sparkline />
-              <span className={i === 2 ? "down" : "up"}>
-                {i === 2 ? "-3.2%" : "+8." + i + "%"}
+              <span className={i % 2 === 0 ? "up" : "down"}>
+                {i % 2 === 0 ? `+8.${i}%` : `-3.${i}%`}
               </span>
             </div>
           ))}
         </div>
 
         <div className="featured">
-          <h2>MADLADS</h2>
-          <p>
-            Mad Lads is a collection of 8,888 unique NFTs built on Solana.
-          </p>
+          <h2>{activeCollection.name}</h2>
+          <p>High demand NFT collection loaded instantly.</p>
           <button className="detailsBtn">More details →</button>
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* Footer */}
       <footer className="footer">
-        <div className="about">
-          <h2>NovaMint</h2>
-          <p>
-            The next-generation multichain NFT hub — discover, trade and mint.
-          </p>
-
-          <div className="socials">
-            <Twitter size={18} />
-            <Youtube size={18} />
-            <Instagram size={18} />
-          </div>
+        <h2 className="logo">AETHERS</h2>
+        <div className="socials">
+          <Twitter size={18} />
+          <Youtube size={18} />
+          <Instagram size={18} />
         </div>
       </footer>
 
